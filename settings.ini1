@@ -1,0 +1,4 @@
+; RENAME FILE TO settings.ini
+[settings]
+user_token=
+bot_token=
