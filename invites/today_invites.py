@@ -25,7 +25,7 @@ class DiscordInvites:
         tod_inv = db.get_today_invites(family)
         for inv in tod_inv:
             embed.add_embed_field(name=inv[2],
-                                  value=f'**[{inv[0]}]({inv[1]})** *({inv[4]} LVL)* `с {inv[3].split("-")[0]} до {inv[3].split("-")[1]}`',
+                                  value=f'**[{inv[0]}]({inv[1]})** `с {inv[3].split("-")[0]} до {inv[3].split("-")[1]}`',
                                   inline=False)
         self.webhook.remove_embeds()
 

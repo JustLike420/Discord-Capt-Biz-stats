@@ -38,12 +38,14 @@ class DataBase:
                                 "fruction varchar(50),"
                                 "discord varchar(150),"
                                 "fk_invite_server int REFERENCES servers(id));")
+
     def create_famq(self):
         with self.connection:
             self.cursor.execute("CREATE TABLE families("
                                 "id serial PRIMARY KEY,"
                                 "name varchar(50) NOT NULL,"
                                 "hook varchar(150) NOT NULL);")
+
     def create_days(self):
         with self.connection:
             self.cursor.execute("CREATE TABLE days(id serial PRIMARY KEY,day varchar(50), day_num integer);")
@@ -84,10 +86,15 @@ class DataBase:
                 "INSERT INTO servers(name, mode, time, level) VALUES ('🏛 Burton', 'bizwar', '14:00-23:00', 5);"
                 "INSERT INTO servers(name, mode, time, level) VALUES ('🤵 Richman', 'bizwar', '14:00-23:00', 2);"
                 "INSERT INTO servers(name, mode, time, level) VALUES ('🤵 Richman', 'capture', '13:00-23:00', 2);"
+                "INSERT INTO servers(name, mode, time, level) VALUES ('🌅 Sunrise', 'capture', '13:00-23:00', 5);"
+                "INSERT INTO servers(name, mode, time, level) VALUES ('🌅 Sunrise', 'bizwar', '13:00-23:00', 5);"
             )
+
     def add_new_server(self, name, mode, time, level):
         with self.connection:
-            self.cursor.execute("INSERT INTO servers(name, mode, time, level) VALUES (%s, %s, %s, %s);", (name, mode, time, level,))
+            self.cursor.execute("INSERT INTO servers(name, mode, time, level) VALUES (%s, %s, %s, %s);",
+                                (name, mode, time, level,))
+
     def add_server_days(self):
         with self.connection:
             self.cursor.execute(
@@ -102,20 +109,27 @@ class DataBase:
                 "INSERT INTO server_days VALUES (9, 1), (9, 3), (9, 5), (9, 7);"  # alta cpt
                 "INSERT INTO server_days VALUES (10, 2), (10, 4), (10, 6), (10, 7);"  # alta biz
                 "INSERT INTO server_days VALUES (11, 2), (11, 4), (11, 6), (11, 7);"  # bb cpt
-                "INSERT INTO server_days VALUES (12, 2), (12, 3), (12, 5), (12, 6);")  # bb biz
+                "INSERT INTO server_days VALUES (12, 2), (12, 3), (12, 5), (12, 6);"  # bb biz
+                "INSERT INTO server_days VALUES (17, 1), (17, 3), (17, 5), (17, 7)"  # sr cpt
+                "INSERT INTO server_days VALUES (18, 2), (18, 4), (18, 6), (18, 7)"  # sr biz
+            )  # bb biz
+
     def add_family(self, famq, hook):
         with self.connection:
             self.cursor.execute(
                 "INSERT INTO families(name, hook) VALUES (%s, %s);", (famq, hook))
+
     def add_invite(self, fruction, discord, mode, server, family):
 
         with self.connection:
-            self.cursor.execute(f"SELECT id FROM servers WHERE mode = '{mode}' AND LOWER(name) Like LOWER('%{server}');")
+            self.cursor.execute(
+                f"SELECT id FROM servers WHERE mode = '{mode}' AND LOWER(name) Like LOWER('%{server}');")
             server_id = self.cursor.fetchone()[0]
             self.cursor.execute(f"SELECT id FROM families WHERE name = '{family}'")
             family_id = self.cursor.fetchone()[0]
             self.cursor.execute(
-                "INSERT INTO invites(fruction, discord, server_id, family) VALUES (%s, %s, %s, %s);", (fruction, discord, server_id, family_id))
+                "INSERT INTO invites(fruction, discord, server_id, family) VALUES (%s, %s, %s, %s);",
+                (fruction, discord, server_id, family_id))
 
     def get_today_invites(self, family):
         with self.connection:
@@ -124,6 +138,15 @@ class DataBase:
             self.cursor.execute(
                 "SELECT fruction, discord, s.name, s.time, s.level FROM invites "
                 f"LEFT JOIN servers s ON s.id=invites.server_id AND invites.family={family_id} WHERE s.id IN (SELECT server_id FROM server_days WHERE day_id=EXTRACT(dow FROM now()));")
+            return self.cursor.fetchall()
+
+    def get_famq_invites(self, family):
+        with self.connection:
+            self.cursor.execute(f"SELECT id FROM families WHERE name = '{family}'")
+            family_id = self.cursor.fetchone()[0]
+            self.cursor.execute(
+                f"SELECT fruction, (select name from servers where id=i.server_id ) FROM invites i where family = {family_id}"
+                )
             return self.cursor.fetchall()
     def get_all(self):
         with self.connection:
